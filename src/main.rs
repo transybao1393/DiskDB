@@ -97,7 +97,7 @@ impl DiskDB {
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    let db = Arc::new(DiskDB::new("mydb"));
+    let db = Arc::new(DiskDB::new("diskdb"));
     let db_clone = db.clone();
     tokio::spawn(async move {
         db_clone.flush_memtable().await;
