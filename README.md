@@ -11,7 +11,32 @@ DiskDB is a new database designed to efficiently store data on disk while ensuri
 
 ## Installation
 
+Before building the project, make sure to install the required system dependencies.
+
+### macOS
+
 ```sh
+brew install rocksdb
+brew install cmake
+brew install snappy
+brew install lz4
+brew install zstd
+```
+
+clang version 14
+```sh
+brew install llvm@14
+export PATH="/opt/homebrew/opt/llvm@14/bin:$PATH" 
+clang --version # Should return 14
+```
+
+then,
+
+```sh
+cargo run 
+
+or
+
 cargo build
 ```
 
