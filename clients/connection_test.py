@@ -3,7 +3,7 @@ import socket
 def send_command(command):
     """Send a command to the database and return the response."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect(("127.0.0.1", 6380))  # Change port if necessary
+        s.connect(("0.0.0.0", 6380))  # Change port if necessary
         s.sendall(command.encode() + b"\n")
         response = s.recv(1024).decode()
         return response.strip()

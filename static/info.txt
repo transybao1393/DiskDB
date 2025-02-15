@@ -1,0 +1,6 @@
+Static Library (.a)
+	•	The library is embedded into the final executable.
+	•	No external dependencies at runtime.
+	•	Larger binary size.
+	•	Faster execution (since no dynamic linking is needed).
+	•	Example: libmy_library.a (Linux/macOS), my_library.lib (Windows).

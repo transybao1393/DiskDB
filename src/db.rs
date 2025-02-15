@@ -5,6 +5,8 @@ use std::collections::{HashMap, VecDeque};
 use std::time::{Instant, Duration}; // Add Duration here
 use tokio::time::sleep;
 use log::{error, info};
+use std::fs;
+use std::path::Path;
 
 /// Disk-based key-value store with caching, persistence, and batch writes.
 #[derive(Clone)]
@@ -26,6 +28,17 @@ impl DiskDB {
         opts.set_max_write_buffer_number(4); // Allow up to 4 write buffers before flushing.
         opts.set_target_file_size_base(256 * 1024 * 1024); // Set target SST file size to 256MB.
         opts.set_level_compaction_dynamic_level_bytes(true); // Enable dynamic compaction.
+        
+        // Ensure the RocksDB directory does not already exist
+        let path = Path::new(path);
+        if path.exists() {
+            if path.is_dir() {
+                fs::remove_dir_all(path).expect("Failed to remove existing RocksDB directory");
+            } else {
+                fs::remove_file(path).expect("Failed to remove existing RocksDB file");
+            }
+        }
+        
         let db = DB::open(&opts, path).expect("Failed to open DB");
         Self {
             db: Arc::new(RwLock::new(db)),

@@ -1,0 +1,6 @@
+Shared Library (.so, .dll, .dylib)
+	•	The library is separate from the executable.
+	•	The executable loads it dynamically at runtime.
+	•	Smaller binary size.
+	•	Allows updating the library without recompiling the executable.
+	•	Example: libmy_library.so (Linux), my_library.dll (Windows), libmy_library.dylib (macOS).
