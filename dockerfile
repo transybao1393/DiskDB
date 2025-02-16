@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     liblz4-dev \
     libzstd-dev \
     curl \
+    python3 \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Rust and Cargo
@@ -29,7 +31,7 @@ COPY . .
 RUN rm -rf /app/diskdb
 
 # Build the project
-RUN cargo build --release
+RUN cargo build --release --bin diskdb
 
 # Copy the compiled binary from the release folder to the container
 RUN cp target/release/diskdb /app/

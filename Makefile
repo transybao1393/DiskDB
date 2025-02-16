@@ -1,6 +1,6 @@
 # Define targets
 TARGET_DIR = target/release
-BINARY_NAME = my_binary
+BINARY_NAME = diskdb
 
 # Define cross-compilation targets
 LINUX_X86_64 = x86_64-unknown-linux-gnu
@@ -47,6 +47,10 @@ clippy:
 # Run tests
 test:
 	cargo test
+
+# Connection test
+connection-test:
+	python clients/connection_test.py
 
 # Strip binary to reduce size (Linux/macOS)
 strip:
