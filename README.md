@@ -102,6 +102,237 @@ DiskDB is a modern, high-performance database that brings you the best of both w
 - **Rich Client Libraries**: First-class Python and Go support
 - **Docker Ready**: One command to launch
 
+### 🔄 **Redis Compatibility Explained**
+
+#### What Does "Redis Compatible" Mean?
+
+DiskDB implements the Redis Serialization Protocol (RESP) and supports Redis commands. This means you can use DiskDB as a drop-in replacement for Redis in many scenarios:
+
+1. **Use Any Redis Client Library** - No special DiskDB client required
+2. **Same Command Syntax** - Your Redis commands work unchanged  
+3. **Compatible Wire Protocol** - Network communication is identical to Redis
+4. **Familiar Tools Work** - redis-cli, RedisInsight, and other Redis tools are compatible
+
+#### **Use Any Redis Client**
+
+You can connect to DiskDB using any Redis client library without modifications:
+
+```python
+# Python with redis-py
+import redis
+r = redis.Redis(host='localhost', port=6380)  # Just change the port!
+r.set('key', 'value')  # Works exactly like Redis
+
+# Node.js with ioredis or node-redis
+const Redis = require('ioredis');
+const redis = new Redis({ port: 6380 });
+await redis.set('key', 'value');
+
+# Ruby with redis-rb
+require 'redis'
+redis = Redis.new(port: 6380)
+redis.set('key', 'value')
+
+# Java with Jedis
+Jedis jedis = new Jedis("localhost", 6380);
+jedis.set("key", "value");
+
+# Go with go-redis
+client := redis.NewClient(&redis.Options{
+    Addr: "localhost:6380",
+})
+client.Set(ctx, "key", "value", 0)
+
+# PHP with phpredis or Predis
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6380);
+$redis->set('key', 'value');
+```
+
+#### **Compatible Operations**
+
+DiskDB supports the most commonly used Redis commands:
+
+**✅ Fully Supported:**
+- **String Operations**: SET, GET, INCR, DECR, INCRBY, DECRBY, APPEND, STRLEN, GETSET, MGET, MSET
+- **List Operations**: LPUSH, RPUSH, LPOP, RPOP, LRANGE, LLEN, LINDEX, LSET, LTRIM
+- **Set Operations**: SADD, SREM, SISMEMBER, SMEMBERS, SCARD, SINTER, SUNION, SDIFF
+- **Hash Operations**: HSET, HGET, HDEL, HGETALL, HEXISTS, HLEN, HKEYS, HVALS, HMGET, HMSET
+- **Sorted Set Operations**: ZADD, ZREM, ZRANGE, ZREVRANGE, ZSCORE, ZCARD, ZCOUNT, ZRANK
+- **Key Operations**: EXISTS, DEL, TYPE, KEYS, SCAN, EXPIRE, TTL, PERSIST
+- **Connection**: PING, ECHO, SELECT, AUTH
+- **Server**: INFO, FLUSHDB, DBSIZE
+
+**➕ DiskDB Extensions (Beyond Redis):**
+- **JSON Operations**: JSON.SET, JSON.GET, JSON.DEL with JSONPath support
+- **Stream Operations**: XADD, XRANGE, XLEN for event streaming
+- **Enhanced Persistence**: Automatic disk persistence without SAVE/BGSAVE
+
+**🚧 Coming Soon (Planned):**
+- **Pub/Sub**: PUBLISH, SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE
+- **Transactions**: MULTI, EXEC, WATCH, DISCARD
+- **Lua Scripting**: EVAL, EVALSHA, SCRIPT LOAD
+- **Geo Operations**: GEOADD, GEODIST, GEORADIUS
+- **HyperLogLog**: PFADD, PFCOUNT, PFMERGE
+
+**⚠️ Not Supported:**
+- **Cluster Operations**: DiskDB is single-node (clustering planned for v2.0)
+- **Redis Modules**: Use DiskDB's built-in features instead
+- **Dangerous Operations**: FLUSHALL, SHUTDOWN, CONFIG SET (for safety)
+- **Legacy Commands**: Deprecated Redis commands
+
+#### **Protocol-Level Compatibility**
+
+DiskDB speaks the exact same protocol as Redis:
+
+```bash
+# Using redis-cli with DiskDB
+$ redis-cli -p 6380
+127.0.0.1:6380> SET mykey "Hello DiskDB"
+OK
+127.0.0.1:6380> GET mykey
+"Hello DiskDB"
+127.0.0.1:6380> INCR counter
+(integer) 1
+
+# Using telnet to send raw Redis protocol
+$ telnet localhost 6380
+*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$5\r\nvalue\r\n
++OK\r\n
+
+# Works with Redis GUI tools
+# RedisInsight, Redis Commander, etc. - just point them to port 6380
+```
+
+#### **What This Means for Your Application**
+
+**No Code Changes Required:**
+```python
+# Your existing Redis code
+def cache_user(user_id, data):
+    redis_client.setex(f"user:{user_id}", 3600, json.dumps(data))
+    
+def get_cached_user(user_id):
+    data = redis_client.get(f"user:{user_id}")
+    return json.loads(data) if data else None
+
+# Works identically with DiskDB - just change connection!
+```
+
+**Compatible with Redis ORMs and Frameworks:**
+- **Python**: Works with Flask-Redis, Django-Redis, Celery
+- **Node.js**: Compatible with Bull, Bee-Queue, node-resque
+- **Ruby**: Works with Sidekiq, Resque, Redis-Objects
+- **Java**: Compatible with Spring Data Redis, Redisson
+
+#### **Migration Path**
+
+Migrating from Redis to DiskDB is straightforward:
+
+```bash
+# Option 1: Simple port change
+# Just update your connection string from:
+redis://localhost:6379
+# To:
+redis://localhost:6380
+
+# Option 2: Export/Import data
+# Export from Redis
+redis-cli --rdb dump.rdb
+
+# Import to DiskDB (coming in v1.1)
+diskdb-cli --import dump.rdb
+
+# Option 3: Dual operation during migration
+# Run both Redis and DiskDB, gradually migrate
+```
+
+**Zero-Downtime Migration Example:**
+```python
+# Gradual migration strategy
+class DualWriteCache:
+    def __init__(self):
+        self.redis = redis.Redis(port=6379)    # Old Redis
+        self.diskdb = redis.Redis(port=6380)   # New DiskDB
+    
+    def set(self, key, value):
+        # Write to both during migration
+        self.redis.set(key, value)
+        self.diskdb.set(key, value)
+    
+    def get(self, key):
+        # Read from DiskDB, fallback to Redis
+        value = self.diskdb.get(key)
+        if value is None:
+            value = self.redis.get(key)
+            if value:
+                self.diskdb.set(key, value)  # Backfill
+        return value
+```
+
+#### **Key Differences from Redis**
+
+While maintaining compatibility, DiskDB has important differences:
+
+1. **Persistent by Default**
+   - Redis: In-memory with optional persistence
+   - DiskDB: Always persisted, no data loss on restart
+
+2. **Memory Management**
+   - Redis: Limited by RAM, eviction policies
+   - DiskDB: Can store more data than RAM using disk
+
+3. **Default Port**
+   - Redis: 6379
+   - DiskDB: 6380 (to run alongside Redis)
+
+4. **Enhanced Features**
+   - Native JSON support without modules
+   - Built-in compression
+   - Optimized for large values
+
+5. **Performance Characteristics**
+   - Redis: Fastest for hot data in RAM
+   - DiskDB: Consistent performance, better for large datasets
+
+#### **When to Use DiskDB vs Redis**
+
+**Choose DiskDB when:**
+- You need guaranteed persistence
+- Dataset exceeds available RAM
+- You want automatic compression
+- You need JSON operations without modules
+- You're currently using Redis with AOF/RDB
+
+**Stay with Redis when:**
+- You need Redis Cluster
+- You require specific Redis modules
+- You need absolute lowest latency
+- You're using Redis Streams heavily (until full support)
+
+#### **Verification and Testing**
+
+Ensure compatibility with your use case:
+
+```python
+# Test script to verify DiskDB compatibility
+def test_diskdb_compatibility():
+    r = redis.Redis(port=6380)
+    
+    # Test basic operations
+    assert r.set('test', 'value') == True
+    assert r.get('test') == b'value'
+    
+    # Test data types
+    r.lpush('list', 'item1', 'item2')
+    assert r.llen('list') == 2
+    
+    r.hset('hash', 'field', 'value')
+    assert r.hget('hash', 'field') == b'value'
+    
+    print("✅ All compatibility tests passed!")
+```
+
 ## Installation
 
 ### Server Installation
