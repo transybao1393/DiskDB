@@ -2,6 +2,13 @@
 name = "diskdb"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
+
+[features]
+default = []
+c_parser = []
+memory_pool = ["c_parser"]
+io_uring = ["tokio-uring", "io-uring"]
 
 [dependencies]
 rocksdb = "0.21.0"
@@ -16,3 +23,50 @@ async-trait = "0.1.74"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 bincode = "1.3"
+lazy_static = "1.4"
+bytes = "1.5"
+socket2 = "0.5"
+
+# Optional dependencies for io_uring
+[target.'cfg(target_os = "linux")'.dependencies]
+tokio-uring = { version = "0.4", optional = true }
+io-uring = { version = "0.6", optional = true }
+
+[build-dependencies]
+cc = "1.0"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
+tempfile = "3.8"
+
+[[bench]]
+name = "protocol_parsing"
+harness = false
+
+[[bench]]
+name = "core_operations"
+harness = false
+
+[[bench]]
+name = "memory_usage"
+harness = false
+
+[[bench]]
+name = "parser_comparison"
+harness = false
+
+[[bench]]
+name = "memory_pool"
+harness = false
+
+[[bench]]
+name = "network_io"
+harness = false
+
+[[bench]]
+name = "optimization_comparison"
+harness = false
+
+[[bench]]
+name = "simple_comparison"
+harness = false

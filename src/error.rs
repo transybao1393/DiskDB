@@ -10,6 +10,7 @@ pub enum DiskDBError {
     InvalidCommand(String),
     KeyNotFound(String),
     ConnectionClosed,
+    Config(String),
 }
 
 impl fmt::Display for DiskDBError {
@@ -22,6 +23,7 @@ impl fmt::Display for DiskDBError {
             DiskDBError::InvalidCommand(cmd) => write!(f, "Invalid command: {}", cmd),
             DiskDBError::KeyNotFound(key) => write!(f, "Key not found: {}", key),
             DiskDBError::ConnectionClosed => write!(f, "Connection closed"),
+            DiskDBError::Config(msg) => write!(f, "Configuration error: {}", msg),
         }
     }
 }
@@ -45,5 +47,6 @@ impl From<rocksdb::Error> for DiskDBError {
         DiskDBError::Database(err.to_string())
     }
 }
+
 
 pub type Result<T> = std::result::Result<T, DiskDBError>;

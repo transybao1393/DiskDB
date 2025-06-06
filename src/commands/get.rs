@@ -20,7 +20,7 @@ impl GetCommand {
 impl Command for GetCommand {
     async fn execute(&self, storage: Arc<dyn Storage>) -> Result<Response> {
         match storage.get(&self.key).await? {
-            Some(DataType::String(value)) => Ok(Response::Value(value)),
+            Some(DataType::String(value)) => Ok(Response::String(Some(value))),
             Some(_) => Err(DiskDBError::Protocol("WRONGTYPE Operation against a key holding the wrong kind of value".to_string())),
             None => Err(DiskDBError::KeyNotFound(self.key.clone())),
         }

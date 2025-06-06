@@ -27,7 +27,7 @@ impl CommandExecutor {
             // String operations
             Request::Get { key } => {
                 match self.storage.get(&key).await? {
-                    Some(DataType::String(value)) => Ok(Response::Value(value)),
+                    Some(DataType::String(value)) => Ok(Response::String(Some(value))),
                     Some(_) => Ok(Response::Error("WRONGTYPE Operation against a key holding the wrong kind of value".to_string())),
                     None => Ok(Response::Null),
                 }
@@ -88,7 +88,7 @@ impl CommandExecutor {
                             } else {
                                 self.storage.set(&key, data).await?;
                             }
-                            Ok(Response::Value(value))
+                            Ok(Response::String(Some(value)))
                         }
                         Ok(None) => Ok(Response::Null),
                         Err(e) => Ok(Response::Error(e)),
@@ -105,7 +105,7 @@ impl CommandExecutor {
                             } else {
                                 self.storage.set(&key, data).await?;
                             }
-                            Ok(Response::Value(value))
+                            Ok(Response::String(Some(value)))
                         }
                         Ok(None) => Ok(Response::Null),
                         Err(e) => Ok(Response::Error(e)),
@@ -116,7 +116,7 @@ impl CommandExecutor {
             Request::LRange { key, start, stop } => {
                 match self.storage.get(&key).await? {
                     Some(data) => match data.lrange(start, stop) {
-                        Ok(values) => Ok(Response::Array(values)),
+                        Ok(values) => Ok(Response::Array(values.into_iter().map(|v| Response::String(Some(v))).collect())),
                         Err(e) => Ok(Response::Error(e)),
                     },
                     None => Ok(Response::Array(vec![])),
@@ -154,7 +154,7 @@ impl CommandExecutor {
             Request::SMembers { key } => {
                 match self.storage.get(&key).await? {
                     Some(DataType::Set(set)) => {
-                        let members: Vec<String> = set.into_iter().collect();
+                        let members: Vec<Response> = set.into_iter().map(|v| Response::String(Some(v))).collect();
                         Ok(Response::Array(members))
                     }
                     Some(_) => Ok(Response::Error("WRONGTYPE Operation against a key holding the wrong kind of value".to_string())),
@@ -188,7 +188,7 @@ impl CommandExecutor {
             Request::HGet { key, field } => {
                 match self.storage.get(&key).await? {
                     Some(data) => match data.hget(&field) {
-                        Ok(Some(value)) => Ok(Response::Value(value)),
+                        Ok(Some(value)) => Ok(Response::String(Some(value))),
                         Ok(None) => Ok(Response::Null),
                         Err(e) => Ok(Response::Error(e)),
                     },
@@ -214,8 +214,8 @@ impl CommandExecutor {
                     Some(DataType::Hash(hash)) => {
                         let mut result = Vec::new();
                         for (field, value) in hash {
-                            result.push(field);
-                            result.push(value);
+                            result.push(Response::String(Some(field)));
+                            result.push(Response::String(Some(value)));
                         }
                         Ok(Response::Array(result))
                     }
@@ -258,12 +258,12 @@ impl CommandExecutor {
                 match self.storage.get(&key).await? {
                     Some(data) => match data.zrange(start, stop, with_scores) {
                         Ok(members) => {
-                            let result: Vec<String> = members.into_iter()
+                            let result: Vec<Response> = members.into_iter()
                                 .flat_map(|(member, score)| {
                                     if let Some(s) = score {
-                                        vec![member, s.to_string()]
+                                        vec![Response::String(Some(member)), Response::String(Some(s.to_string()))]
                                     } else {
-                                        vec![member]
+                                        vec![Response::String(Some(member))]
                                     }
                                 })
                                 .collect();
@@ -277,7 +277,7 @@ impl CommandExecutor {
             Request::ZScore { key, member } => {
                 match self.storage.get(&key).await? {
                     Some(data) => match data.zscore(&member) {
-                        Ok(Some(score)) => Ok(Response::Value(score.to_string())),
+                        Ok(Some(score)) => Ok(Response::String(Some(score.to_string()))),
                         Ok(None) => Ok(Response::Null),
                         Err(e) => Ok(Response::Error(e)),
                     },
@@ -310,7 +310,7 @@ impl CommandExecutor {
             Request::JsonGet { key, path } => {
                 match self.storage.get(&key).await? {
                     Some(data) => match data.json_get(&path) {
-                        Ok(Some(value)) => Ok(Response::Value(value.to_string())),
+                        Ok(Some(value)) => Ok(Response::String(Some(value.to_string()))),
                         Ok(None) => Ok(Response::Null),
                         Err(e) => Ok(Response::Error(e)),
                     },
@@ -331,10 +331,12 @@ impl CommandExecutor {
             // Stream operations
             Request::XAdd { key, id, fields } => {
                 let mut data = self.storage.get_or_create_stream(&key).await?;
-                match data.xadd(id, fields) {
+                let id_option = if id == "*" { None } else { Some(id) };
+                let fields_map: std::collections::HashMap<String, String> = fields.into_iter().collect();
+                match data.xadd(id_option, fields_map) {
                     Ok(entry_id) => {
                         self.storage.set(&key, data).await?;
-                        Ok(Response::Value(entry_id))
+                        Ok(Response::String(Some(entry_id)))
                     }
                     Err(e) => Ok(Response::Error(e)),
                 }
@@ -345,10 +347,10 @@ impl CommandExecutor {
                         Ok(entries) => {
                             let mut result = Vec::new();
                             for entry in entries {
-                                result.push(entry.id.clone());
+                                result.push(Response::String(Some(entry.id.clone())));
                                 for (field, value) in entry.fields {
-                                    result.push(field);
-                                    result.push(value);
+                                    result.push(Response::String(Some(field)));
+                                    result.push(Response::String(Some(value)));
                                 }
                             }
                             Ok(Response::Array(result))
@@ -371,8 +373,8 @@ impl CommandExecutor {
             // Utility operations
             Request::Type { key } => {
                 match self.storage.get_type(&key).await? {
-                    Some(type_name) => Ok(Response::Value(type_name)),
-                    None => Ok(Response::Value("none".to_string())),
+                    Some(type_name) => Ok(Response::String(Some(type_name))),
+                    None => Ok(Response::String(Some("none".to_string()))),
                 }
             }
             Request::Del { keys } => {
@@ -382,6 +384,17 @@ impl CommandExecutor {
             Request::Exists { keys } => {
                 let count = self.storage.exists_multiple(&keys).await?;
                 Ok(Response::Integer(count as i64))
+            }
+            Request::Ping => Ok(Response::String(Some("PONG".to_string()))),
+            Request::Echo { message } => Ok(Response::String(Some(message))),
+            Request::FlushDb => {
+                // For now, return error as this is dangerous
+                Ok(Response::Error("FLUSHDB not implemented for safety".to_string()))
+            }
+            Request::Info => {
+                // Return basic server info
+                let info = "# Server\nversion:0.1.0\n# Storage\nengine:rocksdb".to_string();
+                Ok(Response::String(Some(info)))
             }
         }
     }

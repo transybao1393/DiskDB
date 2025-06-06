@@ -1,0 +1,56 @@
+DiskDB Baseline Performance Raw Data
+====================================
+Date: 2024-12-09
+
+Quick Performance Test Results
+------------------------------
+
+Protocol Parsing:
+- GET parsing: 1,612,784 ops/sec (0.001 ms/op)
+- SET parsing: 1,027,833 ops/sec (0.001 ms/op)
+- ZADD (5 members) parsing: 357,961 ops/sec (0.003 ms/op)
+- SET (1KB value) parsing: 38,370 ops/sec (0.026 ms/op)
+
+Storage Operations:
+- SET storage: 129,630 ops/sec (0.007 ms/op)
+- GET storage: 490,677 ops/sec (0.002 ms/op)
+
+Analysis Notes:
+--------------
+
+1. Protocol Parsing Bottlenecks:
+   - GET command: Fast but still allocates 3 strings (command, key, result)
+   - SET command: Slower due to value string allocation
+   - ZADD command: Much slower due to parsing multiple score-member pairs
+   - Large payloads: Significant slowdown with 1KB values
+
+2. Storage Layer Performance:
+   - GET is 3.8x faster than SET
+   - Both limited by bincode serialization
+   - RocksDB overhead is acceptable
+
+3. Memory Allocation Hotspots:
+   - Request::parse() allocates for every whitespace split
+   - DataType serialization clones entire structures
+   - No object pooling or arena allocation
+
+4. Data Structure Issues:
+   - Lists: Vec<String> with O(n) front insertion
+   - Sets: HashSet re-hashing on growth
+   - SortedSets: Full sort on every ZRANGE query
+   - JSON: Double serialization (JSON → String → Bincode)
+
+5. Estimated Python Client Performance:
+   - Network overhead: ~0.1-0.2ms per request
+   - Total SET: ~10-15K ops/sec
+   - Total GET: ~15-20K ops/sec
+
+Optimization Opportunities:
+-------------------------
+
+1. Zero-copy protocol parsing: 3-5x improvement
+2. Arena allocation: 50% reduction in allocation overhead  
+3. Optimized data structures: 2-4x for list/zset operations
+4. Direct serialization: 2x improvement for JSON
+
+Expected Overall Improvement: 2.5-4x throughput with C/C++ optimizations
