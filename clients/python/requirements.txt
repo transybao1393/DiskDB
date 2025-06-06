@@ -1,0 +1,6 @@
+# DiskDB Python client has no external dependencies!
+# For development only:
+# pytest>=6.0
+# black
+# flake8
+# mypy

@@ -1,0 +1,12 @@
+MANIFEST.in
+README.md
+requirements.txt
+setup.py
+diskdb/__init__.py
+diskdb/client.py
+diskdb/exceptions.py
+diskdb.egg-info/PKG-INFO
+diskdb.egg-info/SOURCES.txt
+diskdb.egg-info/dependency_links.txt
+diskdb.egg-info/requires.txt
+diskdb.egg-info/top_level.txt
