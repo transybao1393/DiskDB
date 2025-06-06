@@ -212,7 +212,7 @@ except DiskDBError as e:
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](https://github.com/yourusername/DiskDB/blob/main/CONTRIBUTING.md).
+We welcome contributions! Please see our [Contributing Guide](https://github.com/transybao1393/DiskDB/blob/main/CONTRIBUTING.md).
 
 ## License
 

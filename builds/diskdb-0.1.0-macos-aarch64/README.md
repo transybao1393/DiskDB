@@ -85,7 +85,7 @@ apt-get update && apt-get install -y \
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/DiskDB.git
+git clone https://github.com/transybao1393/DiskDB.git
 cd DiskDB
 
 # Build and run

@@ -103,7 +103,7 @@ cd diskdb-0.1.0-<platform>
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/DiskDB.git
+git clone https://github.com/transybao1393/DiskDB.git
 cd DiskDB
 
 # Build and run
@@ -141,7 +141,7 @@ pip install diskdb-0.1.0-py3-none-any.whl
 #### Option 3: Install from Source
 
 ```bash
-git clone https://github.com/yourusername/DiskDB.git
+git clone https://github.com/transybao1393/DiskDB.git
 cd DiskDB/clients/python
 pip install .
 ```
@@ -350,7 +350,7 @@ package main
 
 import (
     "fmt"
-    "github.com/yourusername/diskdb/client"
+    "github.com/transybao1393/diskdb/client"
 )
 
 func main() {

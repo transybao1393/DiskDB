@@ -2,11 +2,11 @@ Metadata-Version: 2.1
 Name: diskdb
 Version: 0.1.0
 Summary: Python client for DiskDB - A fast, persistent key-value database
-Home-page: https://github.com/yourusername/DiskDB
+Home-page: https://github.com/transybao1393/DiskDB
 Author: DiskDB Team
-Author-email: team@diskdb.io
-Project-URL: Bug Reports, https://github.com/yourusername/DiskDB/issues
-Project-URL: Source, https://github.com/yourusername/DiskDB
+Author-email: transybao93@gmail.com
+Project-URL: Bug Reports, https://github.com/transybao1393/DiskDB/issues
+Project-URL: Source, https://github.com/transybao1393/DiskDB
 Project-URL: Documentation, https://diskdb.readthedocs.io
 Keywords: database key-value redis-compatible persistent diskdb rocksdb
 Classifier: Development Status :: 4 - Beta
@@ -245,7 +245,7 @@ except DiskDBError as e:
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](https://github.com/yourusername/DiskDB/blob/main/CONTRIBUTING.md).
+We welcome contributions! Please see our [Contributing Guide](https://github.com/transybao1393/DiskDB/blob/main/CONTRIBUTING.md).
 
 ## License
 
