@@ -4,15 +4,21 @@ use std::sync::Arc;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Instant, Duration}; // Add Duration here
 use tokio::time::sleep;
-use log::{error, info};
+use log::error;
 use std::fs;
 use std::path::Path;
 
+// Type alias for the cache to reduce complexity
+type CacheMap = HashMap<String, (String, Option<Instant>)>;
+
 /// Disk-based key-value store with caching, persistence, and batch writes.
+/// 
+/// DEPRECATED: This is the legacy implementation. Use the new storage trait
+/// and RocksDBStorage implementation instead.
 #[derive(Clone)]
 pub struct DiskDB {
     pub db: Arc<RwLock<DB>>, // RocksDB instance wrapped with a RwLock for better concurrency.
-    pub cache: Arc<RwLock<HashMap<String, (String, Option<Instant>)>>>, // In-memory cache with optional expiration.
+    pub cache: Arc<RwLock<CacheMap>>, // In-memory cache with optional expiration.
     pub memtable: Arc<RwLock<VecDeque<(String, String)>>>, // Memtable for batch writes.
 }
 
@@ -55,7 +61,7 @@ impl DiskDB {
             if memtable.is_empty() {
                 continue;
             }
-            let mut db = self.db.write().await;
+            let db = self.db.write().await;
             let mut batch = WriteBatch::default();
             while let Some((key, value)) = memtable.pop_front() {
                 batch.put(&key, &value);

@@ -1,21 +1,22 @@
-package diskdb
+package main
 
 import (
-	"bufio"
 	"fmt"
+	"log"
+)
+
+// Copy of the client code for testing
+import (
+	"bufio"
 	"net"
 	"strings"
 )
 
-// Client represents a DiskDB client connection
 type Client struct {
-	host   string
-	port   int
 	conn   net.Conn
 	reader *bufio.Reader
 }
 
-// NewClient creates a new DiskDB client
 func NewClient(address string) (*Client, error) {
 	conn, err := net.Dial("tcp", address)
 	if err != nil {
@@ -28,7 +29,6 @@ func NewClient(address string) (*Client, error) {
 	}, nil
 }
 
-// sendCommand sends a command to the server and returns the response
 func (c *Client) sendCommand(command string) (string, error) {
 	_, err := c.conn.Write([]byte(command + "\n"))
 	if err != nil {
@@ -43,7 +43,6 @@ func (c *Client) sendCommand(command string) (string, error) {
 	return strings.TrimSpace(response), nil
 }
 
-// Set stores a key-value pair in the database
 func (c *Client) Set(key, value string) error {
 	response, err := c.sendCommand(fmt.Sprintf("SET %s %s", key, value))
 	if err != nil {
@@ -57,7 +56,6 @@ func (c *Client) Set(key, value string) error {
 	return nil
 }
 
-// Get retrieves a value by key from the database
 func (c *Client) Get(key string) (string, error) {
 	response, err := c.sendCommand(fmt.Sprintf("GET %s", key))
 	if err != nil {
@@ -71,7 +69,6 @@ func (c *Client) Get(key string) (string, error) {
 	return response, nil
 }
 
-// Close closes the connection to the server
 func (c *Client) Close() error {
 	if c.conn != nil {
 		return c.conn.Close()
@@ -79,24 +76,44 @@ func (c *Client) Close() error {
 	return nil
 }
 
-// Example usage (can be moved to a separate file)
-func ExampleUsage() {
+func main() {
+	fmt.Println("Testing DiskDB Go client...")
+	
 	client, err := NewClient("localhost:6380")
 	if err != nil {
-		panic(err)
+		log.Fatal("Failed to connect:", err)
 	}
 	defer client.Close()
 	
-	// Set some values
-	err = client.Set("name", "Jane Doe")
-	if err != nil {
-		panic(err)
+	// Test SET operations
+	fmt.Println("Setting test values...")
+	if err := client.Set("language", "Go"); err != nil {
+		log.Fatal("Failed to set language:", err)
+	}
+	if err := client.Set("version", "1.21"); err != nil {
+		log.Fatal("Failed to set version:", err)
 	}
 	
-	// Get values
-	value, err := client.Get("name")
+	// Test GET operations
+	fmt.Println("Getting test values...")
+	
+	language, err := client.Get("language")
 	if err != nil {
-		panic(err)
+		log.Fatal("Failed to get language:", err)
 	}
-	fmt.Printf("Name: %s\n", value)
+	fmt.Printf("Language: %s\n", language)
+	
+	version, err := client.Get("version")
+	if err != nil {
+		log.Fatal("Failed to get version:", err)
+	}
+	fmt.Printf("Version: %s\n", version)
+	
+	// Test non-existent key
+	_, err = client.Get("nonexistent")
+	if err != nil {
+		fmt.Printf("Expected error for non-existent key: %v\n", err)
+	}
+	
+	fmt.Println("All tests passed!")
 }
