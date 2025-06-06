@@ -6,18 +6,20 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    DiskDB Performance Evolution                      │
+│                    DiskDB Performance Evolution                     │
 ├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  Original │████████                                    │ 796K ops/s  │
-│           │                                                          │
-│  v0.2     │████████████████████████████████████████  │ 4.2M ops/s  │
-│           │                          5.3x Faster                    │
-│                                                                      │
-│  Feature Highlights:                                                 │
-│  • 5.3x faster protocol parsing      • 70% less memory usage        │
-│  • 2.2x faster memory allocation     • Request pipelining           │
-│  • Zero-copy I/O on Linux            • Connection pooling           │
+│                                                                     │
+│  Original  ████████                                    796K ops/s   │
+│                                                                     │
+│  v0.2      ████████████████████████████████████████    4.2M ops/s   │
+│                      5.3x Faster                                    │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│                        Feature Highlights                           │
+├─────────────────────────────────────────────────────────────────────┤
+│  • 5.3x faster protocol parsing     • 70% less memory usage         │
+│  • 2.2x faster memory allocation    • Request pipelining            │
+│  • Zero-copy I/O on Linux           • Connection pooling            │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
