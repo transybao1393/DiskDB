@@ -9,9 +9,88 @@ target/
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
 
-# RustRover
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+# RustRover / IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# DiskDB data directories
+diskdb/
+clients/diskdb/
+data/
+*.db
+
+# Log files
+*.log
+LOG
+LOG.old.*
+
+# RocksDB files
+*.sst
+CURRENT
+IDENTITY
+LOCK
+MANIFEST-*
+OPTIONS-*
+
+# Redis dump files
+dump.rdb
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+.tox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+venv/
+ENV/
+env/
+
+# macOS
+.DS_Store
+
+# Benchmark results (keep only markdown reports)
+benchmark_results/*.json
+benchmark_results/*.txt
+benchmark_results/raw_*
+
+# Temporary test files
+tests/*.tmp
+tests/temp_*
+
+# Build artifacts
+builds/diskdb-*/
+
+# Client build artifacts
+clients/python/build/
+clients/python/dist/
+clients/python/*.egg-info/
+
+# Temporary benchmark scripts (keep only the main ones)
+tests/comprehensive_benchmark.py
+tests/quick_comprehensive_benchmark.py
+tests/ultra_quick_benchmark.py
