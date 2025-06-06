@@ -1107,13 +1107,6 @@ We love contributions! Check out our [CONTRIBUTING.md](CONTRIBUTING.md) for:
 - [ ] RAFT consensus
 - [ ] Kubernetes operator
 
-## 📈 Production Users
-
-DiskDB is trusted by companies processing millions of requests:
-- 🎮 **GameTech Inc**: Leaderboards for 10M+ players
-- 📊 **DataCrunch**: Real-time analytics pipeline
-- 🛒 **ShopFast**: Session store for e-commerce
-
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details.
