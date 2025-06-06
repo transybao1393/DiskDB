@@ -23,12 +23,59 @@
 
 </div>
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Key Features](#-key-features)
+  - [All Your Favorite Data Types](#️-all-your-favorite-data-types)
+  - [Performance That Scales](#-performance-that-scales)
+  - [Enterprise-Grade Reliability](#️-enterprise-grade-reliability)
+  - [Developer Experience](#-developer-experience)
+- [Redis Compatibility](#-redis-compatibility-explained)
+  - [What Does "Redis Compatible" Mean?](#what-does-redis-compatible-mean)
+  - [Client Libraries](#client-libraries)
+  - [Supported Operations](#supported-operations)
+  - [Protocol Details](#protocol-details)
+  - [Migration Path](#migration-path)
+  - [Key Differences](#key-differences-from-redis)
+- [Installation](#installation)
+  - [Server Installation](#server-installation)
+  - [Python Client Installation](#python-client-installation)
+- [Usage Examples](#-usage-examples)
+  - [Python Client](#python-client)
+  - [Error Handling](#error-handling)
+  - [Advanced Usage](#advanced-usage)
+- [Python Package Features](#-python-package-features)
+  - [Real-World Examples](#real-world-examples)
+  - [Session Management](#session-management)
+  - [Rate Limiting](#rate-limiting)
+  - [Task Queue](#task-queue)
+- [Go Client](#go-client)
+- [Direct Network Protocol](#direct-network-protocol)
+- [Advanced Features](#-advanced-features)
+- [Performance & Benchmarks](#-performance--benchmarks)
+  - [Performance Optimizations](#-performance-optimizations)
+  - [Benchmark Results](#benchmark-results)
+  - [Enabling Optimizations](#enabling-optimizations)
+  - [Configuration Options](#configuration-options)
+  - [Running Performance Tests](#running-performance-tests)
+- [Architecture Deep Dive](#️-architecture-deep-dive)
+  - [Modular Design](#modular-design)
+  - [Storage Engine](#storage-engine)
+- [Testing](#-testing)
+- [Contributing](#-contributing)
+- [Roadmap](#️-roadmap)
+- [Production Users](#-production-users)
+- [License](#-license)
+- [Acknowledgments](#-acknowledgments)
+
 ## Overview
 
 DiskDB is a modern, high-performance database that brings you the best of both worlds:
 - ⚡ **Blazing Fast**: Near-instant operations with RocksDB's LSM-tree architecture
 - 💾 **Rock-Solid Persistence**: Your data survives restarts, crashes, and power outages
-- 🔄 **Redis-Compatible**: Drop-in replacement supporting all major Redis data types
+- 🔄 **Redis-Inspired**: Familiar commands and data types with a similar syntax
 - 🌍 **Multi-Language**: Native clients for Python, Go, and more
 - 🔒 **Enterprise-Ready**: TLS encryption, atomic operations, and production-tested
 
@@ -98,7 +145,7 @@ DiskDB is a modern, high-performance database that brings you the best of both w
 
 ### 🔧 **Developer Experience**
 - **Zero Configuration**: Works out of the box
-- **Redis Compatible**: Use existing Redis clients and libraries
+- **Redis-Like Commands**: Familiar syntax for Redis users
 - **Rich Client Libraries**: First-class Python and Go support
 - **Docker Ready**: One command to launch
 
@@ -106,154 +153,139 @@ DiskDB is a modern, high-performance database that brings you the best of both w
 
 #### What Does "Redis Compatible" Mean?
 
-DiskDB implements the Redis Serialization Protocol (RESP) and supports Redis commands. This means you can use DiskDB as a drop-in replacement for Redis in many scenarios:
+DiskDB is Redis-inspired and implements a subset of Redis commands with the same syntax. While it uses a Redis-like protocol, it currently requires its own client libraries:
 
-1. **Use Any Redis Client Library** - No special DiskDB client required
-2. **Same Command Syntax** - Your Redis commands work unchanged  
-3. **Compatible Wire Protocol** - Network communication is identical to Redis
-4. **Familiar Tools Work** - redis-cli, RedisInsight, and other Redis tools are compatible
+1. **Redis-Like Command Syntax** - Commands use familiar Redis syntax (SET, GET, etc.)
+2. **Similar Wire Protocol** - Based on Redis protocol concepts but not fully RESP-compatible
+3. **Own Client Libraries** - Currently requires DiskDB-specific clients (Python, Go)
+4. **Subset of Redis Commands** - Implements the most commonly used Redis operations
 
-#### **Use Any Redis Client**
+#### **Client Libraries**
 
-You can connect to DiskDB using any Redis client library without modifications:
+DiskDB provides its own client libraries that use Redis-like syntax:
 
 ```python
-# Python with redis-py
-import redis
-r = redis.Redis(host='localhost', port=6380)  # Just change the port!
-r.set('key', 'value')  # Works exactly like Redis
+# Python - Using DiskDB client (NOT redis-py)
+from diskdb import DiskDB
+db = DiskDB(host='localhost', port=6380)
+db.set('key', 'value')  # Redis-like syntax
 
-# Node.js with ioredis or node-redis
-const Redis = require('ioredis');
-const redis = new Redis({ port: 6380 });
-await redis.set('key', 'value');
+# Go - Using DiskDB Go adapter
+import "github.com/transybao1393/diskdb/client"
+db, _ := client.Connect("localhost:6380")
+db.Set("key", "value")
 
-# Ruby with redis-rb
-require 'redis'
-redis = Redis.new(port: 6380)
-redis.set('key', 'value')
-
-# Java with Jedis
-Jedis jedis = new Jedis("localhost", 6380);
-jedis.set("key", "value");
-
-# Go with go-redis
-client := redis.NewClient(&redis.Options{
-    Addr: "localhost:6380",
-})
-client.Set(ctx, "key", "value", 0)
-
-# PHP with phpredis or Predis
-$redis = new Redis();
-$redis->connect('127.0.0.1', 6380);
-$redis->set('key', 'value');
+# Direct TCP connection also works
+# You can send commands via telnet or netcat
 ```
 
-#### **Compatible Operations**
+#### **Supported Operations**
 
-DiskDB supports the most commonly used Redis commands:
+DiskDB currently implements these Redis-like commands:
 
-**✅ Fully Supported:**
-- **String Operations**: SET, GET, INCR, DECR, INCRBY, DECRBY, APPEND, STRLEN, GETSET, MGET, MSET
-- **List Operations**: LPUSH, RPUSH, LPOP, RPOP, LRANGE, LLEN, LINDEX, LSET, LTRIM
-- **Set Operations**: SADD, SREM, SISMEMBER, SMEMBERS, SCARD, SINTER, SUNION, SDIFF
-- **Hash Operations**: HSET, HGET, HDEL, HGETALL, HEXISTS, HLEN, HKEYS, HVALS, HMGET, HMSET
-- **Sorted Set Operations**: ZADD, ZREM, ZRANGE, ZREVRANGE, ZSCORE, ZCARD, ZCOUNT, ZRANK
-- **Key Operations**: EXISTS, DEL, TYPE, KEYS, SCAN, EXPIRE, TTL, PERSIST
-- **Connection**: PING, ECHO, SELECT, AUTH
-- **Server**: INFO, FLUSHDB, DBSIZE
+**✅ Implemented:**
+- **String Operations**: SET, GET, INCR, DECR, INCRBY, APPEND
+- **List Operations**: LPUSH, RPUSH, LPOP, RPOP, LRANGE, LLEN
+- **Set Operations**: SADD, SREM, SISMEMBER, SMEMBERS, SCARD
+- **Hash Operations**: HSET, HGET, HDEL, HGETALL, HEXISTS
+- **Sorted Set Operations**: ZADD, ZREM, ZRANGE (with WITHSCORES), ZSCORE, ZCARD
+- **Key Operations**: EXISTS, DEL, TYPE
+- **Connection**: PING, ECHO
+- **Server**: INFO, FLUSHDB
 
-**➕ DiskDB Extensions (Beyond Redis):**
-- **JSON Operations**: JSON.SET, JSON.GET, JSON.DEL with JSONPath support
-- **Stream Operations**: XADD, XRANGE, XLEN for event streaming
-- **Enhanced Persistence**: Automatic disk persistence without SAVE/BGSAVE
+**➕ DiskDB Unique Features:**
+- **JSON Operations**: JSON.SET, JSON.GET, JSON.DEL (native JSON support)
+- **Stream Operations**: XADD, XRANGE, XLEN (event streaming)
+- **Automatic Persistence**: All data persisted to disk automatically
 
-**🚧 Coming Soon (Planned):**
-- **Pub/Sub**: PUBLISH, SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE
+**🚧 Planned Features:**
+- **Additional String Ops**: STRLEN, GETSET, MGET, MSET, DECRBY (in enum but not parser)
+- **Additional List Ops**: LINDEX, LSET, LTRIM, LINSERT
+- **Additional Set Ops**: SINTER, SUNION, SDIFF, SRANDMEMBER
+- **Additional Hash Ops**: HLEN, HKEYS, HVALS, HMGET, HMSET, HINCRBY
+- **Additional Sorted Set Ops**: ZREVRANGE, ZCOUNT, ZRANK, ZREVRANK
+- **Key Management**: EXPIRE, TTL, PERSIST, KEYS, SCAN, RENAME
+- **Pub/Sub**: PUBLISH, SUBSCRIBE, UNSUBSCRIBE
 - **Transactions**: MULTI, EXEC, WATCH, DISCARD
-- **Lua Scripting**: EVAL, EVALSHA, SCRIPT LOAD
-- **Geo Operations**: GEOADD, GEODIST, GEORADIUS
-- **HyperLogLog**: PFADD, PFCOUNT, PFMERGE
+- **Connection**: SELECT, AUTH, DBSIZE
+- **Lua Scripting**: EVAL, EVALSHA
 
-**⚠️ Not Supported:**
-- **Cluster Operations**: DiskDB is single-node (clustering planned for v2.0)
-- **Redis Modules**: Use DiskDB's built-in features instead
-- **Dangerous Operations**: FLUSHALL, SHUTDOWN, CONFIG SET (for safety)
-- **Legacy Commands**: Deprecated Redis commands
+**❌ Not Planned:**
+- **Redis Cluster**: Single-node focus
+- **Redis Modules**: Built-in features instead
+- **Dangerous Ops**: FLUSHALL, SHUTDOWN, CONFIG (for safety)
 
-#### **Protocol-Level Compatibility**
+#### **Protocol Details**
 
-DiskDB speaks the exact same protocol as Redis:
+DiskDB uses a text-based protocol similar to Redis:
 
 ```bash
-# Using redis-cli with DiskDB
-$ redis-cli -p 6380
-127.0.0.1:6380> SET mykey "Hello DiskDB"
-OK
-127.0.0.1:6380> GET mykey
-"Hello DiskDB"
-127.0.0.1:6380> INCR counter
-(integer) 1
-
-# Using telnet to send raw Redis protocol
+# Using telnet or netcat
 $ telnet localhost 6380
-*3\r\n$3\r\nSET\r\n$5\r\nmykey\r\n$5\r\nvalue\r\n
-+OK\r\n
+SET mykey "Hello DiskDB"
+OK
+GET mykey
+Hello DiskDB
 
-# Works with Redis GUI tools
-# RedisInsight, Redis Commander, etc. - just point them to port 6380
+# Simple text protocol format
+# Send: COMMAND arg1 arg2 ...
+# Receive: Response
+
+# Note: DiskDB's protocol is Redis-inspired but not fully RESP-compatible
+# Some Redis tools may work, but full compatibility is not guaranteed
 ```
 
-#### **What This Means for Your Application**
+#### **Using DiskDB in Your Application**
 
-**No Code Changes Required:**
+**DiskDB Client Example:**
 ```python
-# Your existing Redis code
+# Using DiskDB Python client
+from diskdb import DiskDB
+
 def cache_user(user_id, data):
-    redis_client.setex(f"user:{user_id}", 3600, json.dumps(data))
+    db = DiskDB()
+    db.set(f"user:{user_id}", json.dumps(data))
+    # Note: No built-in expiration yet (EXPIRE not implemented)
     
 def get_cached_user(user_id):
-    data = redis_client.get(f"user:{user_id}")
+    db = DiskDB()
+    data = db.get(f"user:{user_id}")
     return json.loads(data) if data else None
-
-# Works identically with DiskDB - just change connection!
 ```
 
-**Compatible with Redis ORMs and Frameworks:**
-- **Python**: Works with Flask-Redis, Django-Redis, Celery
-- **Node.js**: Compatible with Bull, Bee-Queue, node-resque
-- **Ruby**: Works with Sidekiq, Resque, Redis-Objects
-- **Java**: Compatible with Spring Data Redis, Redisson
+**Important Note:** DiskDB requires its own client libraries and is not compatible with Redis ORMs or frameworks like:
+- ❌ redis-py, Flask-Redis, Django-Redis
+- ❌ node-redis, ioredis, Bull
+- ❌ Jedis, Lettuce, Spring Data Redis
+- ✅ Use DiskDB's Python client: `pip install diskdb`
+- ✅ Use DiskDB's Go adapter
 
 #### **Migration Path**
 
-Migrating from Redis to DiskDB is straightforward:
+Migrating from Redis to DiskDB requires code changes since DiskDB uses its own client:
 
-```bash
-# Option 1: Simple port change
-# Just update your connection string from:
-redis://localhost:6379
-# To:
-redis://localhost:6380
+```python
+# Before - Using Redis
+import redis
+r = redis.Redis(port=6379)
+r.set("key", "value")
 
-# Option 2: Export/Import data
-# Export from Redis
-redis-cli --rdb dump.rdb
-
-# Import to DiskDB (coming in v1.1)
-diskdb-cli --import dump.rdb
-
-# Option 3: Dual operation during migration
-# Run both Redis and DiskDB, gradually migrate
+# After - Using DiskDB
+from diskdb import DiskDB
+db = DiskDB(port=6380)
+db.set("key", "value")
 ```
 
-**Zero-Downtime Migration Example:**
+**Migration Strategy:**
 ```python
-# Gradual migration strategy
-class DualWriteCache:
+# Gradual migration with separate clients
+import redis
+from diskdb import DiskDB
+
+class MigrationCache:
     def __init__(self):
-        self.redis = redis.Redis(port=6379)    # Old Redis
-        self.diskdb = redis.Redis(port=6380)   # New DiskDB
+        self.redis = redis.Redis(port=6379)
+        self.diskdb = DiskDB(port=6380)
     
     def set(self, key, value):
         # Write to both during migration
@@ -261,14 +293,17 @@ class DualWriteCache:
         self.diskdb.set(key, value)
     
     def get(self, key):
-        # Read from DiskDB, fallback to Redis
+        # Try DiskDB first, fallback to Redis
         value = self.diskdb.get(key)
         if value is None:
             value = self.redis.get(key)
             if value:
-                self.diskdb.set(key, value)  # Backfill
+                # Backfill to DiskDB
+                self.diskdb.set(key, value.decode())
         return value
 ```
+
+**Note:** Data import tools are planned for future releases.
 
 #### **Key Differences from Redis**
 
@@ -298,39 +333,46 @@ While maintaining compatibility, DiskDB has important differences:
 #### **When to Use DiskDB vs Redis**
 
 **Choose DiskDB when:**
-- You need guaranteed persistence
-- Dataset exceeds available RAM
-- You want automatic compression
-- You need JSON operations without modules
-- You're currently using Redis with AOF/RDB
+- You need guaranteed persistence without configuration
+- Your dataset might exceed available RAM
+- You want built-in JSON and Stream support
+- You're building a new application
+- You prefer Rust-based infrastructure
 
 **Stay with Redis when:**
-- You need Redis Cluster
-- You require specific Redis modules
-- You need absolute lowest latency
-- You're using Redis Streams heavily (until full support)
+- You need full Redis command compatibility
+- You're using Redis-specific client libraries/ORMs
+- You require Redis Cluster or Sentinel
+- You need Redis modules
+- You have existing Redis-dependent code
 
-#### **Verification and Testing**
+#### **Testing Your Use Case**
 
-Ensure compatibility with your use case:
+Test DiskDB with your specific requirements:
 
 ```python
-# Test script to verify DiskDB compatibility
-def test_diskdb_compatibility():
-    r = redis.Redis(port=6380)
+# Test script using DiskDB client
+from diskdb import DiskDB
+
+def test_diskdb_operations():
+    db = DiskDB(port=6380)
     
     # Test basic operations
-    assert r.set('test', 'value') == True
-    assert r.get('test') == b'value'
+    assert db.set('test', 'value') == True
+    assert db.get('test') == 'value'
     
     # Test data types
-    r.lpush('list', 'item1', 'item2')
-    assert r.llen('list') == 2
+    db.lpush('list', 'item1', 'item2')
+    assert db.llen('list') == 2
     
-    r.hset('hash', 'field', 'value')
-    assert r.hget('hash', 'field') == b'value'
+    db.hset('hash', 'field', 'value')
+    assert db.hget('hash', 'field') == 'value'
     
-    print("✅ All compatibility tests passed!")
+    # Test unique features
+    db.json_set('doc', '$', {'name': 'test'})
+    assert db.json_get('doc', '$.name') == ['test']
+    
+    print("✅ All DiskDB tests passed!")
 ```
 
 ## Installation
@@ -583,13 +625,20 @@ if db.exists(f"session:{session_id}"):
 #### Rate Limiting
 ```python
 def check_rate_limit(user_id: str, limit: int = 100) -> bool:
-    key = f"rate_limit:{user_id}:{datetime.now().hour}"
-    current = db.incr(key)
+    from datetime import datetime
     
-    if current == 1:
-        db.expire(key, 3600)  # Expire after 1 hour
+    # Note: EXPIRE not yet implemented, use hourly keys as workaround
+    hour = datetime.now().strftime("%Y%m%d%H")
+    key = f"rate_limit:{user_id}:{hour}"
     
-    return current <= limit
+    try:
+        current = db.incr(key)
+    except:
+        # Key doesn't exist, initialize it
+        db.set(key, "1")
+        current = 1
+    
+    return int(current) <= limit
 ```
 
 #### Task Queue
@@ -617,24 +666,29 @@ def process_tasks():
 package main
 
 import (
+    "bufio"
     "fmt"
-    "github.com/transybao1393/diskdb/client"
+    "net"
 )
 
+// Basic Go client example (full client implementation available in clients/golang_adapter.go)
 func main() {
-    // Connect to DiskDB
-    db, err := client.Connect("localhost:6380")
+    conn, err := net.Dial("tcp", "localhost:6380")
     if err != nil {
         panic(err)
     }
-    defer db.Close()
+    defer conn.Close()
     
-    // Use it like Redis
-    err = db.Set("visits", "1000")
-    db.Incr("visits")
+    // Send SET command
+    fmt.Fprintf(conn, "SET visits 1000\n")
+    reader := bufio.NewReader(conn)
+    response, _ := reader.ReadString('\n')
+    fmt.Printf("SET Response: %s", response)
     
-    visits, _ := db.Get("visits")
-    fmt.Printf("Total visits: %s\n", visits)
+    // Send GET command
+    fmt.Fprintf(conn, "GET visits\n")
+    value, _ := reader.ReadString('\n')
+    fmt.Printf("GET Response: %s", value)
 }
 ```
 
