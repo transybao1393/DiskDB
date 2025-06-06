@@ -87,8 +87,8 @@ DiskDB is a modern, high-performance database that brings you the best of both w
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │  Python Client  │     │    Go Client    │     │  Other Clients  │
 └────────┬────────┘     └────────┬────────┘     └────────┬────────┘
-         │                       │                         │
-         └───────────────────────┴─────────────────────────┘
+         │                       │                       │
+         └───────────────────────┴───────────────────────┘
                                  │
                           TCP/TLS Protocol
                                  │
