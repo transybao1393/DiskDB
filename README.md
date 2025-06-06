@@ -2,6 +2,8 @@
 
 🚀 **Lightning-fast, Redis-compatible persistent database** built in Rust with RocksDB. Experience the power of in-memory performance with the reliability of disk persistence.
 
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/transybao)
+
 <div align="center">
 
 ```
